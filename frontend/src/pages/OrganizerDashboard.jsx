@@ -2,7 +2,6 @@ import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
 import toast from 'react-hot-toast';
-import { Trash2 } from 'lucide-react';
 import { AuthContext } from '../context/authContextValue';
 
 const OrganizerDashboard = () => {
@@ -53,7 +52,7 @@ const OrganizerDashboard = () => {
     };
 
     const deleteEvent = async (eventId) => {
-        if (!window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+        if (!window.confirm('Are you sure you want to delete this event?')) {
             return;
         }
 
@@ -61,7 +60,6 @@ const OrganizerDashboard = () => {
         try {
             await axiosInstance.delete(`/events/delete-events/${eventId}`);
             setEvents((currentEvents) => currentEvents.filter((event) => event._id !== eventId));
-            setApplications((currentApplications) => currentApplications.filter((application) => application.eventId?._id !== eventId));
             toast.success('Event deleted successfully');
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to delete event');
@@ -121,11 +119,9 @@ const OrganizerDashboard = () => {
                                             type="button"
                                             onClick={() => deleteEvent(event._id)}
                                             disabled={deletingEvent === event._id}
-                                            title="Delete event"
-                                            aria-label={`Delete ${event.title}`}
-                                            className="inline-flex items-center justify-center rounded-lg p-2 text-red-600 transition hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                            className="rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
                                         >
-                                            <Trash2 size={18} />
+                                            {deletingEvent === event._id ? 'Deleting...' : 'Delete'}
                                         </button>
                                     </td>
                                 </tr>
