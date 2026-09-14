@@ -59,7 +59,7 @@ const OrganizerDashboard = () => {
 
         setDeletingEvent(eventId);
         try {
-            await axiosInstance.delete(`/events/${eventId}`);
+            await axiosInstance.delete(`/events/delete-events/${eventId}`);
             setEvents((currentEvents) => currentEvents.filter((event) => event._id !== eventId));
             setApplications((currentApplications) => currentApplications.filter((application) => application.eventId?._id !== eventId));
             toast.success('Event deleted successfully');
