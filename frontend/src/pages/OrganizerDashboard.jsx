@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import axiosInstance from '../utils/axiosInstance';
 import toast from 'react-hot-toast';
+import { Trash2 } from 'lucide-react';
 import { AuthContext } from '../context/authContextValue';
 
 const OrganizerDashboard = () => {
@@ -11,6 +12,7 @@ const OrganizerDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [updatingApplication, setUpdatingApplication] = useState(null);
+    const [deletingEvent, setDeletingEvent] = useState(null);
 
     const fetchDashboardData = async () => {
         setError('');
@@ -50,6 +52,24 @@ const OrganizerDashboard = () => {
         }
     };
 
+    const deleteEvent = async (eventId) => {
+        if (!window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+            return;
+        }
+
+        setDeletingEvent(eventId);
+        try {
+            await axiosInstance.delete(`/events/${eventId}`);
+            setEvents((currentEvents) => currentEvents.filter((event) => event._id !== eventId));
+            setApplications((currentApplications) => currentApplications.filter((application) => application.eventId?._id !== eventId));
+            toast.success('Event deleted successfully');
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to delete event');
+        } finally {
+            setDeletingEvent(null);
+        }
+    };
+
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
             <div className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -83,6 +103,7 @@ const OrganizerDashboard = () => {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event Name</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
@@ -94,6 +115,18 @@ const OrganizerDashboard = () => {
                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${event.status === 'Approved' ? 'bg-green-100 text-green-800' : event.status === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
                                             {event.status || 'Pending'}
                                         </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                                        <button
+                                            type="button"
+                                            onClick={() => deleteEvent(event._id)}
+                                            disabled={deletingEvent === event._id}
+                                            title="Delete event"
+                                            aria-label={`Delete ${event.title}`}
+                                            className="inline-flex items-center justify-center rounded-lg p-2 text-red-600 transition hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
