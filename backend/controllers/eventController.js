@@ -1,5 +1,6 @@
 import Event from '../models/Event.models.js';
 import Booking from '../models/Booking.models.js';
+import mongoose from 'mongoose';
 
 // ==========================================
 // 1. CREATE EVENT (Only for Organizers)
@@ -50,10 +51,42 @@ export const getOrganizerEvents = async (req, res) => {
         console.error("Fetch Organizer Events Error:", error);
         return res.status(500).json({ success: false, message: "Internal server error" });
     }
-};        
+};
 
 // ==========================================
-// 3. GET ALL EVENTS (For Participants/Home Page)
+// 3. DELETE ORGANIZER'S EVENT
+// ==========================================
+export const deleteEvent = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.isValidObjectId(id)) {
+            return res.status(400).json({ success: false, message: "Invalid event ID" });
+        }
+
+        const event = await Event.findOneAndDelete({
+            _id: id,
+            organizerId: req.user._id
+        });
+
+        if (!event) {
+            return res.status(404).json({ success: false, message: "Event not found or access denied" });
+        }
+
+        await Booking.deleteMany({ eventId: event._id });
+
+        return res.status(200).json({
+            success: true,
+            message: "Event deleted successfully"
+        });
+    } catch (error) {
+        console.error("Delete Event Error:", error);
+        return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+};
+
+// ==========================================
+// 4. GET ALL EVENTS (For Participants/Home Page)
 // ==========================================
 export const getAllEvents = async (req, res) => {
     try {
@@ -73,7 +106,7 @@ export const getAllEvents = async (req, res) => {
 };
 
 // ==========================================
-// 4. GET SINGLE EVENT DETAILS
+// 5. GET SINGLE EVENT DETAILS
 // ==========================================
 export const getEventById = async (req, res) => {
     try {
